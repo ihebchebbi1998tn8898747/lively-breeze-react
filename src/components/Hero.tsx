@@ -1,26 +1,25 @@
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { motion } from 'framer-motion';
 
 const Hero = () => {
   return (
-    <div className="min-h-[70vh] flex items-center justify-center bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white px-4">
-      <div className="max-w-4xl mx-auto text-center animate-fade-in">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6">
-          Welcome to Your Amazing App
-        </h1>
-        <p className="text-xl md:text-2xl mb-8 opacity-90">
-          Build something incredible with modern web technologies
-        </p>
-        <Button
-          size="lg"
-          variant="secondary"
-          className="group hover:scale-105 transition-transform duration-200"
-        >
-          Get Started
-          <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-        </Button>
-      </div>
-    </div>
+    <section className="relative h-screen">
+      <motion.div 
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: "url('banner.png')",
+          willChange: 'transform' // Optimize GPU acceleration
+        }}
+        initial={{ scale: 1.1, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{
+          duration: 1.2,
+          ease: [0.43, 0.13, 0.23, 0.96],
+          delay: 0.2
+        }}
+      />
+      <div className="absolute inset-0 bg-black/50" />
+    </section>
   );
 };
 
