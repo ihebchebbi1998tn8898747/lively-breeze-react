@@ -1,9 +1,9 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { trackVisitor } from '../utils/visitorTracking';
-import SalesPopup from '../components/SalesPopup';
-import WhatsAppPopup from '../components/WhatsAppPopup';
+import { Skeleton } from "@/components/ui/skeleton";
 
+// Lazy load components
 const TopNavbar = React.lazy(() => import('../components/TopNavbar'));
 const BrandNavbar = React.lazy(() => import('../components/BrandNavbar'));
 const MainNavbar = React.lazy(() => import('../components/MainNavbar'));
@@ -16,18 +16,29 @@ const BrandLocation = React.lazy(() => import('../components/BrandLocation'));
 const Footer = React.lazy(() => import('../components/Footer'));
 const LoadingScreen = React.lazy(() => import('../components/LoadingScreen'));
 const GiftCollection = React.lazy(() => import('../components/GiftCollection'));
+const WhatsAppPopup = React.lazy(() => import('../components/WhatsAppPopup'));
+const SalesPopup = React.lazy(() => import('../components/SalesPopup'));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="w-full h-24 animate-pulse">
+    <Skeleton className="w-full h-full" />
+  </div>
+);
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInView, setIsInView] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     trackVisitor('Accueil');
     const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      if (scrollTop > 100) {
-        setIsInView(true);
-      }
+      startTransition(() => {
+        if (window.scrollY > 100) {
+          setIsInView(true);
+        }
+      });
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -38,7 +49,13 @@ const Index = () => {
     <div className="min-h-screen relative">
       <AnimatePresence mode="wait">
         {isLoading ? (
-          <LoadingScreen onLoadingComplete={() => setIsLoading(false)} />
+          <Suspense fallback={<LoadingFallback />}>
+            <LoadingScreen onLoadingComplete={() => {
+              startTransition(() => {
+                setIsLoading(false);
+              });
+            }} />
+          </Suspense>
         ) : (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -49,7 +66,7 @@ const Index = () => {
               staggerChildren: 0.1
             }}
           >
-            <Suspense fallback={<div></div>}>
+            <Suspense fallback={<LoadingFallback />}>
               <TopNavbar />
               <BrandNavbar />
               <div className="hidden lg:block">
@@ -63,7 +80,9 @@ const Index = () => {
                 animate={{ opacity: isInView ? 1 : 0 }}
                 transition={{ duration: 1.8 }}
               >
-                <Products />
+                <Suspense fallback={<LoadingFallback />}>
+                  <Products />
+                </Suspense>
               </motion.div>
 
               <motion.div
@@ -71,7 +90,9 @@ const Index = () => {
                 animate={{ opacity: isInView ? 1 : 0 }}
                 transition={{ duration: 2 }}
               >
-                <NewCollection />
+                <Suspense fallback={<LoadingFallback />}>
+                  <NewCollection />
+                </Suspense>
               </motion.div>
 
               <motion.div
@@ -79,7 +100,9 @@ const Index = () => {
                 animate={{ opacity: isInView ? 1 : 0 }}
                 transition={{ duration: 2.2 }}
               >
-                <Men />
+                <Suspense fallback={<LoadingFallback />}>
+                  <Men />
+                </Suspense>
               </motion.div>
 
               <motion.div
@@ -87,7 +110,9 @@ const Index = () => {
                 animate={{ opacity: isInView ? 1 : 0 }}
                 transition={{ duration: 2.4 }}
               >
-                <BrandIntro />
+                <Suspense fallback={<LoadingFallback />}>
+                  <BrandIntro />
+                </Suspense>
               </motion.div>
 
               <motion.div
@@ -95,7 +120,9 @@ const Index = () => {
                 animate={{ opacity: isInView ? 1 : 0 }}
                 transition={{ duration: 2.6 }}
               >
-                <GiftCollection />
+                <Suspense fallback={<LoadingFallback />}>
+                  <GiftCollection />
+                </Suspense>
               </motion.div>
 
               <motion.div
@@ -103,7 +130,9 @@ const Index = () => {
                 animate={{ opacity: isInView ? 1 : 0 }}
                 transition={{ duration: 2.8 }}
               >
-                <BrandLocation />
+                <Suspense fallback={<LoadingFallback />}>
+                  <BrandLocation />
+                </Suspense>
               </motion.div>
 
               <motion.div
@@ -111,9 +140,15 @@ const Index = () => {
                 animate={{ opacity: isInView ? 1 : 0 }}
                 transition={{ duration: 3 }}
               >
-                <Footer />
+                <Suspense fallback={<LoadingFallback />}>
+                  <Footer />
+                </Suspense>
               </motion.div>
-        <WhatsAppPopup />
+
+              <Suspense fallback={null}>
+                <WhatsAppPopup />
+                <SalesPopup />
+              </Suspense>
             </Suspense>
           </motion.div>
         )}
