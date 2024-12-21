@@ -11,12 +11,11 @@ export const trackVisitor = async (pageName: string, retryCount = 0): Promise<vo
   try {
     console.log('Starting visitor tracking for page:', pageName);
     
-    // Get visitor's IP directly from the server
     const visitorData = {
       page_visitors: pageName,
-      city_visitors: 'Unknown', // We'll let the server handle location data
-      country_visitors: 'Unknown', // We'll let the server handle location data
-      ip_visitors: 'Server-Side', // The server will capture the real IP
+      city_visitors: 'Unknown', // Server will handle this
+      country_visitors: 'Unknown', // Server will handle this
+      ip_visitors: 'Server-Side', // Server will detect the real IP
       date_visitors: new Date().toISOString().split('T')[0]
     };
 
@@ -29,6 +28,8 @@ export const trackVisitor = async (pageName: string, retryCount = 0): Promise<vo
       }
     });
 
+    console.log('Tracking response:', response.data);
+
     if (response.data.status === 'success') {
       console.log('Visitor tracking successful:', response.data);
     } else {
@@ -37,14 +38,12 @@ export const trackVisitor = async (pageName: string, retryCount = 0): Promise<vo
   } catch (error) {
     console.error('Error tracking visitor:', error);
 
-    // Implement retry logic
     if (retryCount < MAX_RETRIES) {
       console.log(`Retrying... Attempt ${retryCount + 1} of ${MAX_RETRIES}`);
       await delay(RETRY_DELAY);
       return trackVisitor(pageName, retryCount + 1);
     }
 
-    // Show error toast only after all retries have failed
     toast({
       title: "Tracking Error",
       description: "Unable to track your visit at this time.",
