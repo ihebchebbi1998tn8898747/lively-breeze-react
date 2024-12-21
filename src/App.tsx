@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,15 +6,38 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CartProvider } from "./components/cart/CartProvider";
 import { usePageTracking } from "./hooks/usePageTracking";
-import Index from "./pages/Index";
-import CategoryPage from "./pages/CategoryPage";
-import CartPage from './pages/CartPage';
-import PaymentSuccessPage from './pages/PaymentSuccessPage';
-import PaymentFailurePage from './pages/PaymentFailurePage';
-import PromoCodesPage from './pages/PromoCodesPage';
-import OrderPreviewPage from './pages/OrderPreviewPage';
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { Skeleton } from "./components/ui/skeleton";
 
-const queryClient = new QueryClient();
+// Lazy load pages
+const Index = React.lazy(() => import("./pages/Index"));
+const CategoryPage = React.lazy(() => import("./pages/CategoryPage"));
+const CartPage = React.lazy(() => import('./pages/CartPage'));
+const PaymentSuccessPage = React.lazy(() => import('./pages/PaymentSuccessPage'));
+const PaymentFailurePage = React.lazy(() => import('./pages/PaymentFailurePage'));
+const PromoCodesPage = React.lazy(() => import('./pages/PromoCodesPage'));
+const OrderPreviewPage = React.lazy(() => import('./pages/OrderPreviewPage'));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="w-full max-w-md space-y-4">
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-64 w-full" />
+      <Skeleton className="h-32 w-full" />
+    </div>
+  </div>
+);
 
 // Wrapper component to implement tracking
 const TrackingWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -23,28 +46,79 @@ const TrackingWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <CartProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <TrackingWrapper>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/category/*" element={<CategoryPage />} />
-              <Route path="/cart" element={<CartPage />} />
-              <Route path="/promo-codes" element={<PromoCodesPage />} />
-              <Route path="/order-preview" element={<OrderPreviewPage />} />
-              <Route path="/payment-success" element={<PaymentSuccessPage />} />
-              <Route path="/payment-failure" element={<PaymentFailurePage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </TrackingWrapper>
-        </BrowserRouter>
-      </CartProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <CartProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <TrackingWrapper>
+              <Routes>
+                <Route 
+                  path="/" 
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <Index />
+                    </Suspense>
+                  } 
+                />
+                <Route 
+                  path="/category/*" 
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <CategoryPage />
+                    </Suspense>
+                  } 
+                />
+                <Route 
+                  path="/cart" 
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <CartPage />
+                    </Suspense>
+                  } 
+                />
+                <Route 
+                  path="/promo-codes" 
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <PromoCodesPage />
+                    </Suspense>
+                  } 
+                />
+                <Route 
+                  path="/order-preview" 
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <OrderPreviewPage />
+                    </Suspense>
+                  } 
+                />
+                <Route 
+                  path="/payment-success" 
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <PaymentSuccessPage />
+                    </Suspense>
+                  } 
+                />
+                <Route 
+                  path="/payment-failure" 
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <PaymentFailurePage />
+                    </Suspense>
+                  } 
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </TrackingWrapper>
+          </BrowserRouter>
+        </CartProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

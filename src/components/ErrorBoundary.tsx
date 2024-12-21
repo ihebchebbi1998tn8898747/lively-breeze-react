@@ -1,40 +1,53 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Props {
   children: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
   hasError: boolean;
+  error: Error | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
-    hasError: false
+    hasError: false,
+    error: null
   };
 
-  public static getDerivedStateFromError(_: Error): State {
-    return { hasError: true };
+  public static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
   }
 
+  private handleReset = () => {
+    this.setState({ hasError: false, error: null });
+    window.location.reload();
+  };
+
   public render() {
     if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center p-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Oups! Quelque chose s'est mal passé.
-            </h1>
-            <button
-              className="bg-[#700100] text-white px-4 py-2 rounded-md hover:bg-[#591C1C] transition-colors"
-              onClick={() => window.location.reload()}
+      return this.props.fallback || (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <div className="w-full max-w-md">
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Une erreur s'est produite</AlertTitle>
+              <AlertDescription>
+                {this.state.error?.message || "Une erreur inattendue s'est produite."}
+              </AlertDescription>
+            </Alert>
+            <Button 
+              onClick={this.handleReset}
+              className="w-full bg-[#700100] text-white hover:bg-[#591C1C]"
             >
               Rafraîchir la page
-            </button>
+            </Button>
           </div>
         </div>
       );
